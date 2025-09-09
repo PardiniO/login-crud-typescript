@@ -1,0 +1,25 @@
+version: '3.9'
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: mysql_bd
+    restart: always
+    environment:
+      - MYSQL_ROOT_PASSWORD=root
+      - MYSQL_USER=user_bd
+      - MYSQL_PASSWORD=password
+      - MYSQL_DATABASE=DATABASE_NODE_CRUD
+    ports:
+      - '3311:3306'
+    volumes:
+      - mysql_data:/var/lib/mysql
+  
+  adminer:
+    image: adminer
+    container_name: adminer_node_crud
+    restart: always
+    ports:
+      - "8080:8080"
+volumes:
+  mysql_data:
