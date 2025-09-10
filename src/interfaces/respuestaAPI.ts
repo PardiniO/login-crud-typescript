@@ -1,4 +1,4 @@
-export interface respuestaAPI<T> {
+export interface IrespuestaAPI<T> {
     success: boolean;
     data?: T;
     message: string;
