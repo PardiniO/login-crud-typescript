@@ -1,7 +1,8 @@
 import { Request, Response } from 'express';
+import { AuthService } from "../services/authService";
 import { UsuarioService } from '../services/usuarioService';
-import { Usuario } from '../interfaces/usuarios';
-import { respuestaAPI } from '../interfaces/respuestaAPI';
+import { IUsuario } from '../interfaces/usuarios';
+import { IrespuestaAPI } from '../interfaces/IrespuestaAPI';
 
 // Instancia única del servicio
 const usuarioService = new UsuarioService();
@@ -10,7 +11,7 @@ const usuarioService = new UsuarioService();
 export const obtenerUsuarios = (_req: Request, res: Response) => {
     const usuarios = usuarioService.obtenerUsuarios();
 
-    const respuesta: respuestaAPI<Usuario[]> = {
+    const respuesta: IIrespuestaAPI<IUsuario[]> = {
         success: true,
         data: usuarios,
         message: `Se encontraron ${usuarios.length} usuarios`
@@ -25,14 +26,14 @@ export const obtenerUsuarioPorId = (req: Request, res: Response) => {
     const usuario = usuarioService.buscarPorId(id);
 
     if (usuario) {
-        const respuesta: respuestaAPI<Usuario> = {
+        const respuesta: IrespuestaAPI<IUsuario> = {
             success: true,
             data: usuario,
             message: 'Usuario encontrado'
         };
         res.json(respuesta);
     } else {
-        const respuesta: respuestaAPI<null> = {
+        const respuesta: IrespuestaAPI<null> = {
             success: false,
             message: 'Usuario no encontrado'
         };
@@ -45,7 +46,7 @@ export const crearUsuario = (req: Request, res: Response) => {
     const { nombre, email } = req.body;
 
     if (!nombre || !email) {
-        const respuesta: respuestaAPI<null> = {
+        const respuesta: IrespuestaAPI<null> = {
             success: false,
             message: 'Nombre y email son requeridos'
         };
@@ -54,7 +55,7 @@ export const crearUsuario = (req: Request, res: Response) => {
 
     const nuevoUsuario = usuarioService.agregarUsuario(nombre, email, contraseña);
 
-    const respuesta: respuestaAPI<Usuario> = {
+    const respuesta: IrespuestaAPI<IUsuario> = {
         success: true,
         data: nuevoUsuario,
         message: 'Usuario creado exitosamente'
@@ -69,13 +70,13 @@ export const eliminarUsuario = (req: Request, res: Response) => {
     const eliminado = usuarioService.eliminarUsuario(id);
 
     if (eliminado) {
-        const respuesta: respuestaAPI<null> = {
+        const respuesta: IrespuestaAPI<null> = {
             success: true,
             message: 'Usuario eliminado exitosamente'
         };
         res.json(respuesta);
     } else {
-        const respuesta: respuestaAPI<null> = {
+        const respuesta: IrespuestaAPI<null> = {
             success: false,
             message: 'Usuario no encontrado'
         };
