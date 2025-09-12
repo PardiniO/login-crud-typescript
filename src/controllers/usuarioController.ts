@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import { AuthService } from "../services/authService";
 import { UsuarioService } from '../services/usuarioService';
 import { IUsuario } from '../interfaces/usuarios';
-import { IrespuestaAPI } from '../interfaces/IrespuestaAPI';
+import { IrespuestaAPI } from "../interfaces/respuestaAPI";
 
 // Instancia única del servicio
 const usuarioService = new UsuarioService();
@@ -11,7 +11,7 @@ const usuarioService = new UsuarioService();
 export const obtenerUsuarios = (_req: Request, res: Response) => {
     const usuarios = usuarioService.obtenerUsuarios();
 
-    const respuesta: IIrespuestaAPI<IUsuario[]> = {
+    const respuesta: IrespuestaAPI<IUsuario[]> = {
         success: true,
         data: usuarios,
         message: `Se encontraron ${usuarios.length} usuarios`

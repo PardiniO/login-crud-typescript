@@ -2,9 +2,10 @@ export type Role = "user" | "admin";
 
 export interface IUsuario {
     id?: number,
-    nombre: string,
     email: string,
     contraseña: string,
+    nombre?: string | null,
     rol: Role,
-    fechaCreacion?: Date
+    fechaCreacion?: string,
+    fechaModificacion?: string
 }

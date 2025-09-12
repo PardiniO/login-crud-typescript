@@ -1,15 +1,29 @@
 version: '3.9'
 
 services:
+  app:
+    build: .
+    container_name: node-backend
+    env_file:
+      - .env
+    ports:
+      - 3000:3000
+    depends_on:
+      - mysql
+    volumes:
+      - ./:/usr/src/app
+      - /usr/src/app/node_modules
+    command: npm run dev
+
   mysql:
     image: mysql:8.0
     container_name: mysql_bd
     restart: always
     environment:
-      - MYSQL_ROOT_PASSWORD=root
+      - MYSQL_ROOT_PASSWORD=${DB_PASSWORD}
       - MYSQL_USER=user_bd
       - MYSQL_PASSWORD=password
-      - MYSQL_DATABASE=DATABASE_NODE_CRUD
+      - MYSQL_DATABASE=${DB_NAME}
     ports:
       - '3311:3306'
     volumes:
