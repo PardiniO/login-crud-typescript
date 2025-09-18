@@ -1,85 +1,121 @@
 import { Request, Response } from 'express';
-import { AuthService } from "../services/authService";
-import { UsuarioService } from '../services/usuarioService';
+import { UsuarioModel } from "../models/usuarioModel";
 import { IUsuario } from '../interfaces/usuarios';
 import { IrespuestaAPI } from "../interfaces/respuestaAPI";
 
-// Instancia única del servicio
-const usuarioService = new UsuarioService();
-
-// Obtener todos los usuarios
-export const obtenerUsuarios = (_req: Request, res: Response) => {
-    const usuarios = usuarioService.obtenerUsuarios();
-
-    const respuesta: IrespuestaAPI<IUsuario[]> = {
-        success: true,
-        data: usuarios,
-        message: `Se encontraron ${usuarios.length} usuarios`
+export const obtenerUsuarios = async (_req: Request, res: Response): Promise<Response> => {
+    try {
+        const usuarios: IUsuario[] = await UsuarioModel.listarTodo();
+        
+        const respuesta: IrespuestaAPI<IUsuario[]> = {
+            success: true,
+            data: usuarios,
+            message: `Se encontraron ${usuarios.length} usuarios`
+        };
+        return res.status(200).json(respuesta);
+    } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : 'Error al obtener usuarios';
+        const respuesta: IrespuestaAPI<null> = { success: false, message };
+        return res.status(500).json(respuesta);
     };
-
-    res.json(respuesta);
 };
 
-// Obtener un usuario por ID
-export const obtenerUsuarioPorId = (req: Request, res: Response) => {
-    const id = parseInt(req.params.id);
-    const usuario = usuarioService.buscarPorId(id);
+export const obtenerUsuarioPorId = async (req: Request, res: Response): Promise<Response> => {
+    const id = Number.parseInt(req.params.id, 10);
+    if (Number.isNaN(id)) {
+        const respuesta: IrespuestaAPI<null> = { success: false, message: 'Id inválido' };
+        return res.status(400).json(respuesta);
+    }
 
-    if (usuario) {
-        const respuesta: IrespuestaAPI<IUsuario> = {
-            success: true,
-            data: usuario,
-            message: 'Usuario encontrado'
-        };
-        res.json(respuesta);
-    } else {
-        const respuesta: IrespuestaAPI<null> = {
-            success: false,
-            message: 'Usuario no encontrado'
-        };
-        res.status(404).json(respuesta);
+    try {
+        const usuario = await UsuarioModel.buscarPorId(id);
+        if (usuario) {
+            const respuesta: IrespuestaAPI<IUsuario> = {
+                success: true,
+                data: usuario,
+                message: 'Usuario ${usuario} encontrado'
+            };
+        return res.status(200).json(respuesta);
+        } else {
+            const respuesta: IrespuestaAPI<null> = {
+                success: false,
+                message: 'Usuario no encontrado'
+            };
+            return res.status(404).json(respuesta);
+        }
+    } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : 'Error al buscar usuario';
+        const respuesta: IrespuestaAPI<null> = { success: false, message };
+        return res.status(500).json(respuesta);
     }
 };
 
-// Crear un nuevo usuario
-export const crearUsuario = (req: Request, res: Response) => {
-    const { nombre, email } = req.body;
+export const crearUsuario = async (req: Request, res: Response): Promise<Response> => {
+    const { nombre, email, contraseña, rol } = req.body as IUsuario;
 
     if (!nombre || !email) {
         const respuesta: IrespuestaAPI<null> = {
             success: false,
             message: 'Nombre y email son requeridos'
         };
-        res.status(400).json(respuesta);
+        return res.status(400).json(respuesta);
     }
+    
+    try {
+        const crearResultado = await UsuarioModel.create({ nombre, email, contraseña, rol } as IUsuario);
 
-    const nuevoUsuario = usuarioService.agregarUsuario(nombre, email, contraseña);
+        if (typeof crearResultado === 'number') {
+            const nuevoUsuario = await UsuarioModel.buscarPorId(crearResultado);
 
-    const respuesta: IrespuestaAPI<IUsuario> = {
-        success: true,
-        data: nuevoUsuario,
-        message: 'Usuario creado exitosamente'
-    };
-
-    res.status(201).json(respuesta);
+            if (!nuevoUsuario) {
+                const respuesta: IrespuestaAPI<null> = {  success: false, message: 'Error al recuperar usuario creado' };
+                return res.status(500).json(respuesta);
+            }
+            const respuesta: IrespuestaAPI<IUsuario> = {
+                success: true,
+                data: nuevoUsuario,
+                message: 'Usuario creado correctamente'
+            };
+            return res.status(201).json(respuesta);
+        } else {
+            const respuesta: IrespuestaAPI<null> = { success: false, message: 'Error al crear usuario' };
+            return res.status(500).json(respuesta);
+        }
+    } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : 'Error al crear usuario';
+        const respuesta: IrespuestaAPI<null> = { success: false, message };
+        return res.status(500).json(respuesta);
+    }
 };
 
-// Eliminar un usuario
-export const eliminarUsuario = (req: Request, res: Response) => {
-    const id = parseInt(req.params.id);
-    const eliminado = usuarioService.eliminarUsuario(id);
+export const eliminarUsuario = async (req: Request, res: Response): Promise<Response> => {
+    const id = Number.parseInt(req.params.id);
+    if (Number.isNaN(id)) {
+        const respuesta: IrespuestaAPI<null> = { success: false, message: 'Id inválido' };
+        return res.status(400).json(respuesta);
+    }
 
-    if (eliminado) {
-        const respuesta: IrespuestaAPI<null> = {
-            success: true,
-            message: 'Usuario eliminado exitosamente'
-        };
-        res.json(respuesta);
-    } else {
-        const respuesta: IrespuestaAPI<null> = {
-            success: false,
-            message: 'Usuario no encontrado'
-        };
-        res.status(404).json(respuesta);
+    try {
+        const resultado = await UsuarioModel.borrarPorId(id);
+
+        const borrado = typeof resultado === 'number' ? resultado > 0 : Boolean(resultado);
+
+        if (borrado) {
+            const respuesta: IrespuestaAPI<null> = {
+                success: true,
+                message: 'Usuario eliminado exitosamente'
+            };
+            return res.status(200).json(respuesta);
+        } else {
+            const respuesta: IrespuestaAPI<null> = {
+                success: false,
+                message: 'Usuario no encontrado'
+            };
+            return res.status(404).json(respuesta);
+        }
+    } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : 'Error al eliminar usuario';
+        const respuesta: IrespuestaAPI<null> = { success: false, message };
+        return res.status(500).json(respuesta);
     }
 };

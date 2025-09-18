@@ -1,6 +1,6 @@
 import express, { Application, Request, Response, NextFunction } from 'express';
 import usuarioRoutes from './routes/usuarioRoutes';
-import { respuestaAPI } from './interfaces/respuestaAPI';
+import { IrespuestaAPI } from './interfaces/respuestaAPI';
 
 const app: Application = express();
 const PORT: number = parseInt(process.env.PORT || '3000');
@@ -17,7 +17,7 @@ app.use((req: Request, _res: Response, next: NextFunction) => {
 
 // Rutas
 app.get('/', (_req: Request, res: Response) => {
-    const respuesta: respuestaAPI<string> = {
+    const respuesta: IrespuestaAPI<string> = {
         success: true,
         data: 'Servidor Express con TypeScript funcionando!',
         message: 'API lista para usar'
